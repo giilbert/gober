@@ -1,0 +1,3 @@
+[submodule "maf"]
+	path = maf
+	url = https://github.com/giilbert/maf
