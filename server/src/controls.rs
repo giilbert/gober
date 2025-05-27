@@ -17,6 +17,10 @@ impl StoreData for Controls {
     fn select(data: &Self::Data) -> impl serde::Serialize {
         data
     }
+
+    fn name() -> impl AsRef<str> + Send {
+        "controls"
+    }
 }
 
 async fn set_controls(controls: Store<Controls>, Params(new): Params<Controls>) {
