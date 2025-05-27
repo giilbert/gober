@@ -34,7 +34,7 @@ export const Face: React.FC<{
   }, [y1]);
 
   return (
-    <div className="fixed top-0 left-0 w-screen h-screen bg-white flex flex-col">
+    <div className="fixed top-0 left-0 w-[calc(100vw-90px)] h-[calc(100vh-20px)] bg-white flex flex-col">
       <div className="bg-neutral-900 w-full h-8 text-white px-2 font-bold flex items-center gap-2">
         <CircleIcon size={16} fill="currentColor" className="text-red-500" />
         <p>Don&apos;t break me! You&apos;re on camera.</p>

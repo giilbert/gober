@@ -5,6 +5,7 @@ import { useCallback, useRef, useState } from "react";
 import { Button } from "../components/button";
 import type { MafClient } from "@maf/client";
 import { Face } from "../components/face";
+import { AdminBluetoothDisplay } from "../components/admin-bluetooth-display";
 
 const AdminPage: React.FC = () => {
   const maf = useMafClient();
@@ -110,6 +111,8 @@ const VideoThing: React.FC = () => {
           </>
         )}
       </div>
+
+      <AdminBluetoothDisplay />
 
       {!faceEnabled && (
         <Button

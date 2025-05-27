@@ -67,7 +67,7 @@ export const AdminBluetoothDisplay: React.FC = () => {
       console.error("error running bluetooth display:", err);
       setStatus({ type: "error" });
     });
-  }, []);
+  }, [maf]);
 
   return (
     <div>
