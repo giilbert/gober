@@ -10,9 +10,12 @@ type BluetoothStatus =
     }
   | {
       type: "connected";
+      drive: number;
+      steer: number;
     }
   | {
       type: "error";
+      error: string;
     };
 
 export const AdminBluetoothDisplay: React.FC = () => {
@@ -28,14 +31,15 @@ export const AdminBluetoothDisplay: React.FC = () => {
 
       setStatus({ type: "scanning" });
       const device = await navigator.bluetooth.requestDevice({
-        acceptAllDevices: true,
+        // acceptAllDevices: true,
+        acceptAllDevices: false,
         optionalServices: [DEFAULT_SERVICE_UUID],
       });
 
       const gatt = await device.gatt?.connect();
       if (!gatt) throw new Error("cannot find device gatt");
 
-      setStatus({ type: "connected" });
+      setStatus({ type: "connected", drive: 0, steer: 0 });
 
       const service = await gatt.getPrimaryService(DEFAULT_SERVICE_UUID);
 
@@ -56,6 +60,12 @@ export const AdminBluetoothDisplay: React.FC = () => {
       store.on("change", (controls) => {
         console.log("new controls", controls);
 
+        setStatus({
+          type: "connected",
+          drive: controls.drive,
+          steer: controls.steer,
+        });
+
         driveCharacteristic.writeValue(new Int8Array([controls.drive]));
         steerCharacteristic.writeValue(new Int8Array([controls.steer]));
       });
@@ -65,13 +75,13 @@ export const AdminBluetoothDisplay: React.FC = () => {
     hasRun.current = true;
     run().catch((err) => {
       console.error("error running bluetooth display:", err);
-      setStatus({ type: "error" });
+      setStatus({ type: "error", error: err.toString() });
     });
   }, [maf]);
 
   return (
     <div>
-      <p>bluetooth status: {status.type}</p>
+      <p>bluetooth status: {JSON.stringify(status)}</p>
     </div>
   );
 };
