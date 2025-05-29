@@ -31,8 +31,8 @@ export const AdminBluetoothDisplay: React.FC = () => {
 
       setStatus({ type: "scanning" });
       const device = await navigator.bluetooth.requestDevice({
-        // acceptAllDevices: true,
-        acceptAllDevices: false,
+        acceptAllDevices: true,
+        // acceptAllDevices: false,
         optionalServices: [DEFAULT_SERVICE_UUID],
       });
 
@@ -56,8 +56,9 @@ export const AdminBluetoothDisplay: React.FC = () => {
       const store = maf.store<{
         drive: number;
         steer: number;
-      }>("controls");
-      store.on("change", (controls) => {
+      }>("rc_car_camera_server::controls::Controls");
+      console.log("added store change handler");
+      store.on("change", async (controls) => {
         console.log("new controls", controls);
 
         setStatus({
@@ -66,8 +67,8 @@ export const AdminBluetoothDisplay: React.FC = () => {
           steer: controls.steer,
         });
 
-        driveCharacteristic.writeValue(new Int8Array([controls.drive]));
-        steerCharacteristic.writeValue(new Int8Array([controls.steer]));
+        await driveCharacteristic.writeValue(new Int8Array([controls.drive]));
+        await steerCharacteristic.writeValue(new Int8Array([controls.steer]));
       });
     }
 

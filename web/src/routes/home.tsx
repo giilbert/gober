@@ -51,7 +51,9 @@ const VideoThing: React.FC = () => {
 
       tracing.log("got viewer sdp:", "`" + sdp.substring(0, 40) + "`...");
 
-      const remoteConfiguration = {
+      const remoteConfiguration: RTCConfiguration = {
+        iceTransportPolicy: "all",
+        iceCandidatePoolSize: 2,
         iceServers: [
           { urls: "stun:stun.l.google.com:19302" },
           { urls: "stun:stun1.l.google.com:5349" },
