@@ -5,6 +5,7 @@ import { useMafClient } from "../lib/maf-context";
 import { HomeMenu } from "../components/home-menu";
 import { tracing } from "../lib/tracing";
 import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
+import { getRtcConfig } from "../lib/rtc-helper";
 
 export const audioContext = new AudioContext();
 export let mediaStreamDest: MediaStreamAudioDestinationNode | undefined =
@@ -51,23 +52,7 @@ const VideoThing: React.FC = () => {
 
       tracing.log("got viewer sdp:", "`" + sdp.substring(0, 40) + "`...");
 
-      const remoteConfiguration: RTCConfiguration = {
-        iceTransportPolicy: "all",
-        iceCandidatePoolSize: 2,
-        iceServers: [
-          { urls: "stun:stun.l.google.com:19302" },
-          { urls: "stun:stun1.l.google.com:5349" },
-          {
-            urls: [
-              "turn:eu-0.turn.peerjs.com:3478",
-              "turn:us-0.turn.peerjs.com:3478",
-            ],
-            username: "peerjs",
-            credential: "peerjsp",
-          },
-        ],
-      };
-      const connection = new RTCPeerConnection(remoteConfiguration);
+      const connection = new RTCPeerConnection(await getRtcConfig());
 
       await audioContext.resume();
 

@@ -6,6 +6,7 @@ import { Button } from "../components/button";
 import type { MafClient } from "@maf/client";
 import { Face } from "../components/face";
 import { AdminBluetoothDisplay } from "../components/admin-bluetooth-display";
+import { getRtcConfig } from "../lib/rtc-helper";
 
 const AdminPage: React.FC = () => {
   const maf = useMafClient();
@@ -149,22 +150,7 @@ class Connections {
     maf.channel<string>("new_viewer").on("message", async (viewerId) => {
       console.log("new viewer", viewerId, "creating offer...");
 
-      const connection = new RTCPeerConnection({
-        iceTransportPolicy: "all",
-        iceCandidatePoolSize: 2,
-        iceServers: [
-          { urls: "stun:stun.l.google.com:19302" },
-          { urls: "stun:stun1.l.google.com:5349" },
-          {
-            urls: [
-              "turn:eu-0.turn.peerjs.com:3478",
-              "turn:us-0.turn.peerjs.com:3478",
-            ],
-            username: "peerjs",
-            credential: "peerjsp",
-          },
-        ],
-      });
+      const connection = new RTCPeerConnection(await getRtcConfig());
 
       connection.addEventListener("icecandidate", (event) => {
         // console.log("got local icecandidate", event.candidate);
