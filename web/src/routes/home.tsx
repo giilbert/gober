@@ -1,11 +1,12 @@
 import { createRoute } from "@tanstack/react-router";
 import { layoutRoute } from "./layout";
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useMafClient } from "../lib/maf-context";
 import { HomeMenu } from "../components/home-menu";
 import { tracing } from "../lib/tracing";
 import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
 import { getRtcConfig } from "../lib/rtc-helper";
+import { cn } from "../lib/cn";
 
 export const audioContext = new AudioContext();
 export let mediaStreamDest: MediaStreamAudioDestinationNode | undefined =
@@ -34,8 +35,10 @@ const HomePage = () => {
 const VideoThing: React.FC = () => {
   const hasRun = useRef(false);
   const maf = useMafClient();
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const [hasVideo, setHasVideo] = React.useState(false);
+  const videoOneRef = useRef<HTMLVideoElement>(null);
+  const videoTwoRef = useRef<HTMLVideoElement>(null);
+  const [hasVideo, setHasVideo] = useState(false);
+  const [hasVideoTwo, setHasVideoTwo] = useState(false);
 
   useEffect(() => {
     async function runViewer() {
@@ -92,12 +95,22 @@ const VideoThing: React.FC = () => {
       // });
 
       connection.addEventListener("track", (event) => {
-        if (!videoRef.current) return;
-        const stream = event.streams[0];
-        tracing.log("got remote track! id: ", stream.id);
-        videoRef.current.srcObject = stream;
-        videoRef.current.play();
+        console.log("track event:", event);
+        if (!videoOneRef.current) return;
+        const firstStream = event.streams[0];
+        console.log(firstStream);
+        tracing.log("got remote track! id: ", firstStream.id);
+        videoOneRef.current.srcObject = firstStream;
+        videoOneRef.current.play();
         setHasVideo(true);
+
+        const secondStream = event.streams[1];
+        if (secondStream) {
+          console.log("got second stream:", secondStream);
+          videoTwoRef.current!.srcObject = secondStream;
+          videoTwoRef.current!.play();
+          setHasVideoTwo(true);
+        }
       });
 
       maf.channel("ice_candidate").on("message", async (message) => {
@@ -125,7 +138,14 @@ const VideoThing: React.FC = () => {
           video not connected
         </p>
       )}
-      <video ref={videoRef} autoPlay playsInline className="h-full w-auto" />
+
+      <video ref={videoOneRef} autoPlay playsInline className="h-full w-auto" />
+      <video
+        ref={videoTwoRef}
+        autoPlay
+        playsInline
+        className={cn("h-full w-auto", hasVideoTwo ? "block" : "hidden")}
+      />
     </div>
   );
 };
