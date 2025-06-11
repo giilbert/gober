@@ -69,14 +69,14 @@ const VideoThing: React.FC = () => {
           video: {
             facingMode: { exact: "environment" },
           },
-          audio: false,
+          audio: true,
         });
 
         const frontCamera = await navigator.mediaDevices.getUserMedia({
           video: {
             facingMode: { exact: "user" },
           },
-          audio: true,
+          audio: false,
         });
 
         new Connections(maf, [environmentCamera, frontCamera]);
