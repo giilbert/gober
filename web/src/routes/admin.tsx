@@ -56,45 +56,22 @@ const VideoThing: React.FC = () => {
   const maf = useMafClient();
   const [faceEnabled, setFaceEnabled] = useState(false);
 
-  const videoOneRef = useRef<HTMLVideoElement>(null);
-  const videoTwoRef = useRef<HTMLVideoElement>(null);
-  const startVideoBroadcast = useCallback(
-    async (useFrontBack: boolean) => {
-      if (!videoOneRef.current || !videoTwoRef.current) return;
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const startVideoBroadcast = useCallback(async () => {
+    if (!videoRef.current) return;
 
-      setStatus({ type: "broadcasting" });
+    setStatus({ type: "broadcasting" });
 
-      if (useFrontBack) {
-        const environmentCamera = await navigator.mediaDevices.getUserMedia({
-          video: {
-            facingMode: { exact: "environment" },
-          },
-          audio: true,
-        });
+    const media = await navigator.mediaDevices.getUserMedia({
+      video: true,
+      audio: true,
+    });
 
-        const frontCamera = await navigator.mediaDevices.getUserMedia({
-          video: {
-            facingMode: { exact: "user" },
-          },
-          audio: false,
-        });
+    // TODO: these should be kept separate
+    const connections = new Connections(maf, media);
 
-        new Connections(maf, [environmentCamera, frontCamera]);
-        videoOneRef.current.srcObject = environmentCamera;
-        videoTwoRef.current.srcObject = frontCamera;
-      } else {
-        const media = await navigator.mediaDevices.getUserMedia({
-          video: true,
-          audio: true,
-        });
-
-        // TODO: these should be kept separate
-        new Connections(maf, [media]);
-        videoOneRef.current.srcObject = media;
-      }
-    },
-    [maf]
-  );
+    videoRef.current.srcObject = media;
+  }, [maf]);
 
   return (
     <div className="space-y-4">
@@ -104,29 +81,15 @@ const VideoThing: React.FC = () => {
           playsInline
           muted
           className="w-full h-auto inline-block bg-neutral-700 aspect-video max-w-[60vh]"
-          id="video-1"
-          ref={videoOneRef}
-        ></video>
-        <video
-          autoPlay
-          playsInline
-          muted
-          className="w-full h-auto inline-block bg-neutral-700 aspect-video max-w-[60vh]"
-          id="video-2"
-          ref={videoTwoRef}
+          id="video"
+          ref={videoRef}
         ></video>
 
         {/* <audio ref={audioRef} autoPlay controls /> */}
 
         {status.type === "idle" && (
-          <Button onClick={() => startVideoBroadcast(false)} className="w-full">
-            start broadcast (one camera)
-          </Button>
-        )}
-
-        {status.type === "idle" && (
-          <Button onClick={() => startVideoBroadcast(true)} className="w-full">
-            start broadcast (two cameras)
+          <Button onClick={startVideoBroadcast} className="w-full">
+            start broadcast
           </Button>
         )}
 
@@ -164,11 +127,11 @@ const VideoThing: React.FC = () => {
 };
 
 class Connections {
-  media: MediaStream[];
+  media: MediaStream;
   maf: MafClient;
   connections: Map<string, RTCPeerConnection>;
 
-  constructor(maf: MafClient, media: MediaStream[]) {
+  constructor(maf: MafClient, media: MediaStream) {
     this.media = media;
     this.maf = maf;
     this.connections = new Map();
@@ -212,12 +175,10 @@ class Connections {
         audioStream.connect(audioContext.destination);
       });
 
-      for (const media of this.media) {
-        media.getTracks().forEach((track) => {
-          console.log("adding track", track);
-          connection.addTrack(track, media);
-        });
-      }
+      this.media.getTracks().forEach((track) => {
+        console.log("adding track", track);
+        connection.addTrack(track, media);
+      });
 
       const offer = await connection.createOffer();
       await connection.setLocalDescription(offer);
