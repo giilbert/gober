@@ -9,22 +9,11 @@ import { AdminBluetoothDisplay } from "../components/admin-bluetooth-display";
 import { getRtcConfig } from "../lib/rtc-helper";
 
 const AdminPage: React.FC = () => {
-  const maf = useMafClient();
   const [authenticated, setAuthenticated] = useState(false);
 
-  const join = useCallback(
-    async (passcode: string) => {
-      const success = await maf.rpc<boolean>("join_admin", passcode);
-
-      if (success) {
-        console.log("joined admin");
-        setAuthenticated(true);
-      } else {
-        console.error("failed to join admin");
-      }
-    },
-    [maf]
-  );
+  const join = useCallback(async () => {
+    setAuthenticated(true);
+  }, []);
 
   if (!authenticated) {
     return (
@@ -33,7 +22,7 @@ const AdminPage: React.FC = () => {
           className="flex gap-2 flex-col"
           onSubmit={(e) => {
             e.preventDefault();
-            join("brilliance");
+            join();
           }}
         >
           <Button>JOIN</Button>

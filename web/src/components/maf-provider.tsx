@@ -40,32 +40,50 @@ export const MafProvider: React.FC<{
 
     const client = new MafClient({
       app: "gilbert/test",
-      url: false ? "ws://localhost:3000" : "https://maf-server.fly.dev",
+      url: import.meta.env.DEV
+        ? "ws://localhost:3000"
+        : "https://maf-server.fly.dev",
     });
     clientRef.current = client;
 
     setState({ type: "connecting" });
 
-    Promise.all([
-      client.connect(),
-      new Promise((resolve) =>
-        setTimeout(resolve, import.meta.env.DEV ? 0 : 1000)
-      ),
-    ])
-      .then(() => {
-        if (router.state.location.pathname === "/") {
-          tracing.log("connected to maf server at", client.url.toString());
-          setState({ type: "connected" });
-        } else {
-          setState({ type: "connected-and-ready" });
-        }
-      })
-      .catch((err) => {
-        console.error(err);
-        setTimeout(() => {
-          setState({ type: "error", error: { message: "failed to connect" } });
-        }, 1000);
-      });
+    async function connect() {
+      Promise.all([
+        client.connect(),
+        new Promise((resolve) =>
+          setTimeout(resolve, import.meta.env.DEV ? 0 : 1000)
+        ),
+      ])
+        .then(async () => {
+          if (router.state.location.pathname === "/") {
+            tracing.log("connected to maf server at", client.url.toString());
+            setState({ type: "connected" });
+          } else {
+            if (router.state.location.pathname === "/admin") {
+              await client.rpc<boolean>("join_admin", "brilliance");
+              const unsubscribe = client.on("close", () => {
+                console.warn("maf client closed, retrying connection");
+                unsubscribe();
+                connect();
+              });
+            }
+
+            setState({ type: "connected-and-ready" });
+          }
+        })
+        .catch((err) => {
+          console.error(err);
+          setTimeout(() => {
+            setState({
+              type: "error",
+              error: { message: "failed to connect" },
+            });
+          }, 1000);
+        });
+    }
+
+    connect();
   }, [router.state.location.pathname]);
 
   // const animationDuration = import.meta.env.DEV ? 0 : 0.1;
