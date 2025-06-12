@@ -60,14 +60,12 @@ export const MafProvider: React.FC<{
             tracing.log("connected to maf server at", client.url.toString());
             setState({ type: "connected" });
           } else {
-            if (router.state.location.pathname === "/admin") {
-              await client.rpc<boolean>("join_admin", "brilliance");
-              const unsubscribe = client.on("close", () => {
-                console.warn("maf client closed, retrying connection");
-                unsubscribe();
-                connect();
-              });
-            }
+            await client.rpc<boolean>("join_admin", "brilliance");
+            const unsubscribe = client.on("close", () => {
+              console.warn("maf client closed, retrying connection");
+              unsubscribe();
+              connect();
+            });
 
             setState({ type: "connected-and-ready" });
           }
